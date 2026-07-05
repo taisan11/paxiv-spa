@@ -29,7 +29,10 @@ async function cacheFirst(request: Request, cacheName: string): Promise<Response
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
   if (cached) return cached;
-  const response = await fetch(request);
+  const headers = new Headers(request.headers);
+  headers.set("X-CORS-Referer", "https://www.pixiv.net/");
+  const modifiedRequest = new Request(request, { headers });
+  const response = await fetch(modifiedRequest);
   if (response.ok) cache.put(request, response.clone());
   return response;
 }

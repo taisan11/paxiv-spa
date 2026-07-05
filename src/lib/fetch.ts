@@ -61,6 +61,7 @@ export function withAuth(
   headers.set("accept", "application/json");
   headers.set("referer", "https://www.pixiv.net");
   headers.set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36");
+  headers.set("X-CORS-Referer", "https://www.pixiv.net/");
 
   if (CSRFToken) {
     headers.set("X-Csrf-Token", CSRFToken);
@@ -72,13 +73,16 @@ export function withAuth(
 
   if (PHPSESSID) {
     const cookie = headers.get("Cookie");
+    let cookieStr: string;
     if (cookie && cookie.includes("PHPSESSID=")) {
-      headers.set("Cookie", cookie);
+      cookieStr = cookie;
     } else if (cookie) {
-      headers.set("Cookie", `${cookie}; PHPSESSID=${PHPSESSID};`);
+      cookieStr = `${cookie}; PHPSESSID=${PHPSESSID};`;
     } else {
-      headers.set("Cookie", `PHPSESSID=${PHPSESSID};`);
+      cookieStr = `PHPSESSID=${PHPSESSID};`;
     }
+    headers.set("Cookie", cookieStr);
+    headers.set("X-CORS-Cookie", cookieStr);
   }
 
   return { ...init, headers };

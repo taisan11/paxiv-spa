@@ -1,10 +1,9 @@
+import { proxyUrl } from "./fetch";
+
 export function url2imageURL(url: string): string {
   if (!url) return "";
-  const i = new URL(url);
-  if (i.hostname === "i.pximg.net") {
-    return `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
-  }
-  throw new Error("Invalid URL");
+  if (!url.includes("i.pximg.net")) throw new Error("Invalid URL");
+  return proxyUrl(url);
 }
 
 export function toLowResThumbnailURL(url: string): string {
@@ -12,12 +11,17 @@ export function toLowResThumbnailURL(url: string): string {
   return url.replace(/\/c\/[^/]+\//, "/c/250x250_80_a2/");
 }
 
+const RE_SCRIPT = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+const RE_STYLE = /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi;
+const RE_ON_EVENT = /\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi;
+const RE_JAVASCRIPT = /javascript\s*:/gi;
+
 export function sanitizeHtml(html: string): string {
   return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
-    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
-    .replace(/javascript\s*:/gi, "");
+    .replace(RE_SCRIPT, "")
+    .replace(RE_STYLE, "")
+    .replace(RE_ON_EVENT, "")
+    .replace(RE_JAVASCRIPT, "");
 }
 
 export function normalizePixivMapValues<T>(value: Record<string, T | null> | T[] | null | undefined): T[] {

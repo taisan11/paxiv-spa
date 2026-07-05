@@ -2,17 +2,8 @@ import { createResource, For, Show, Switch, Match, createSignal, onMount, type C
 import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../lib/fetch";
 import { url2imageURL, sanitizeHtml } from "../../lib/util";
+import { saveHistory, toggleBookmark } from "../../lib/storage";
 import type { AjaxNovelDetailResponse } from "../../lib/types/ajax";
-
-function saveHistory(id: string, title: string, url: string) {
-  const key = "paxiv_history_novel";
-  try {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const filtered = data.filter((item: any) => item.id !== id);
-    filtered.unshift({ id, title, type: "novel", url, timestamp: Date.now() });
-    localStorage.setItem(key, JSON.stringify(filtered.slice(0, 1000)));
-  } catch {}
-}
 
 function applyNovelSettings() {
   const family = localStorage.getItem("novel-font-family") || "serif";
@@ -55,7 +46,7 @@ const NovelDetail: Component = () => {
         `https://www.pixiv.net/ajax/novel/${id}`
       );
       if (!data.error) {
-        saveHistory(data.body.id, data.body.title, `/novel/${data.body.id}`);
+        saveHistory(data.body.id, data.body.title, "novel", `/novel/${data.body.id}`);
       }
       return data;
     }
@@ -94,16 +85,7 @@ const NovelDetail: Component = () => {
                 <div class="client-action-bar">
                   <button
                     class="client-action-btn"
-                    onClick={() => {
-                      const bookmarks = JSON.parse(localStorage.getItem("paxiv_bookmarks_novel") || "[]");
-                      const exists = bookmarks.find((b: any) => b.id === details.id);
-                      if (exists) {
-                        localStorage.setItem("paxiv_bookmarks_novel", JSON.stringify(bookmarks.filter((b: any) => b.id !== details.id)));
-                      } else {
-                        bookmarks.unshift({ id: details.id, title: details.title, type: "novel", url: `/novel/${details.id}`, timestamp: Date.now() });
-                        localStorage.setItem("paxiv_bookmarks_novel", JSON.stringify(bookmarks.slice(0, 1000)));
-                      }
-                    }}
+                    onClick={() => toggleBookmark(details.id, details.title, "novel", `/novel/${details.id}`)}
                     type="button"
                   >
                     ブックマークする

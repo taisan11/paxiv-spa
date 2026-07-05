@@ -3,6 +3,7 @@ import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../../lib/fetch";
 import { url2imageURL, sanitizeHtml, normalizePixivMapValues, toLowResThumbnailURL } from "../../../lib/util";
 import { ThumbnailCard } from "../../../components/ThumbnailCard";
+import { toggleFollow } from "../../../lib/storage";
 import type { AjaxUserResponse, AjaxUserProfileTopResponse } from "../../../lib/types/ajax";
 
 const UserProfile: Component = () => {
@@ -73,16 +74,7 @@ const UserProfile: Component = () => {
                 <div class="client-action-bar">
                   <button
                     class="client-action-btn"
-                    onClick={() => {
-                      const follows = JSON.parse(localStorage.getItem("paxiv_follows") || "[]");
-                      const exists = follows.find((f: any) => f.id === user.userId);
-                      if (exists) {
-                        localStorage.setItem("paxiv_follows", JSON.stringify(follows.filter((f: any) => f.id !== user.userId)));
-                      } else {
-                        follows.unshift({ id: user.userId, title: user.name, type: "follow", url: `/users/${user.userId}`, timestamp: Date.now() });
-                        localStorage.setItem("paxiv_follows", JSON.stringify(follows.slice(0, 1000)));
-                      }
-                    }}
+                    onClick={() => toggleFollow(user.userId, user.name, `/users/${user.userId}`)}
                     type="button"
                   >
                     フォローする

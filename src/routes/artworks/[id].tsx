@@ -1,8 +1,9 @@
 import { createResource, For, Show, Switch, Match, createSignal, type Component } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../lib/fetch";
-import { url2imageURL, sanitizeHtml, normalizePixivIdList, toLowResThumbnailURL } from "../../lib/util";
+import { url2imageURL, sanitizeHtml, toLowResThumbnailURL } from "../../lib/util";
 import { ThumbnailCard } from "../../components/ThumbnailCard";
+import { saveHistory, toggleBookmark } from "../../lib/storage";
 import type {
   AjaxIllustDetailResponse,
   AjaxIllustPagesResponse,
@@ -10,16 +11,6 @@ import type {
   AjaxUserIllustsByIdsResponse,
   AjaxUserProfileAllResponse
 } from "../../lib/types/ajax";
-
-function saveHistory(id: string, title: string, type: string, url: string) {
-  const key = `paxiv_history_${type}`;
-  try {
-    const data = JSON.parse(localStorage.getItem(key) || "[]");
-    const filtered = data.filter((item: any) => item.id !== id);
-    filtered.unshift({ id, title, type, url, timestamp: Date.now() });
-    localStorage.setItem(key, JSON.stringify(filtered.slice(0, 1000)));
-  } catch {}
-}
 
 const ArtworkDetail: Component = () => {
   const params = useParams<{ id: string }>();
@@ -99,16 +90,7 @@ const ArtworkDetail: Component = () => {
                 <div class="client-action-bar">
                   <button
                     class="client-action-btn"
-                    onClick={() => {
-                      const bookmarks = JSON.parse(localStorage.getItem("paxiv_bookmarks_artwork") || "[]");
-                      const exists = bookmarks.find((b: any) => b.id === details.id);
-                      if (exists) {
-                        localStorage.setItem("paxiv_bookmarks_artwork", JSON.stringify(bookmarks.filter((b: any) => b.id !== details.id)));
-                      } else {
-                        bookmarks.unshift({ id: details.id, title: details.title, type: "artwork", url: `/artworks/${details.id}`, timestamp: Date.now() });
-                        localStorage.setItem("paxiv_bookmarks_artwork", JSON.stringify(bookmarks.slice(0, 1000)));
-                      }
-                    }}
+                    onClick={() => toggleBookmark(details.id, details.title, "artwork", `/artworks/${details.id}`)}
                     type="button"
                   >
                     ブックマークする

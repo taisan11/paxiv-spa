@@ -1,57 +1,7 @@
 import { createSignal, onMount, For, type Component } from "solid-js";
-
-interface HistoryItem {
-  id: string;
-  title: string;
-  type: "artwork" | "novel";
-  url: string;
-  timestamp: number;
-}
+import { getHistory, getBookmarks, getFollows, clearSection, type HistoryItem } from "../lib/storage";
 
 type HistorySection = "history-artworks" | "history-novel" | "bookmarks-artworks" | "bookmarks-novel" | "follows";
-
-const HISTORY_KEY = "paxiv_history";
-const BOOKMARK_KEY = "paxiv_bookmarks";
-const FOLLOW_KEY = "paxiv_follows";
-
-function getHistory(type: string): HistoryItem[] {
-  try {
-    const data = localStorage.getItem(`${HISTORY_KEY}_${type}`);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function getBookmarks(type: string): HistoryItem[] {
-  try {
-    const data = localStorage.getItem(`${BOOKMARK_KEY}_${type}`);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function getFollows(): HistoryItem[] {
-  try {
-    const data = localStorage.getItem(FOLLOW_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function clearSection(section: HistorySection) {
-  if (section === "follows") {
-    localStorage.removeItem(FOLLOW_KEY);
-  } else if (section.startsWith("bookmarks")) {
-    const type = section.replace("bookmarks-", "");
-    localStorage.removeItem(`${BOOKMARK_KEY}_${type}`);
-  } else {
-    const type = section.replace("history-", "");
-    localStorage.removeItem(`${HISTORY_KEY}_${type}`);
-  }
-}
 
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;

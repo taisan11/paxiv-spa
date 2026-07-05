@@ -1,3 +1,5 @@
+import { getAuth } from "./auth";
+
 export const CORS_PROXIES = [
   { id: "corsproxy.io", name: "corsproxy.io", base: "https://corsproxy.io/" },
   { id: "api.cors.lol", name: "api.cors.lol", base: "https://api.cors.lol/" },
@@ -83,11 +85,8 @@ export function withAuth(
 }
 
 function getAuthFromStorage() {
-  return {
-    PHPSESSID: localStorage.getItem("PHPSESSID") || undefined,
-    csrfToken: localStorage.getItem("X-Csrf-Token") || undefined,
-    userId: localStorage.getItem("userId") || undefined
-  };
+  const { PHPSESSID, csrfToken, userId } = getAuth();
+  return { PHPSESSID, csrfToken, userId };
 }
 
 async function _fetch(url: string | URL, init?: RequestInit, lang: string = "ja"): Promise<Response> {

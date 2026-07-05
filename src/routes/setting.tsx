@@ -97,7 +97,7 @@ const Setting: Component = () => {
             style={{ width: "100%", "max-width": "400px" }}
           />
           <p style={{ "font-size": "0.85rem", color: "var(--text-secondary)" }}>
-            {`プロキシURL末尾に「?url=」を含めてください。例: https://example.com/?url=`}
+            {`プロキシURL末尾に「?url=」を含めないでください。例: https://example.com/`}
           </p>
         </div>
       )}

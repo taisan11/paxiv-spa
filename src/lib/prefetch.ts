@@ -1,9 +1,12 @@
+let observer: IntersectionObserver | null = null;
+
 export function initIdlePrefetch() {
   if (!("requestIdleCallback" in window)) return;
 
   requestIdleCallback(
     () => {
-      const observer = new IntersectionObserver(
+      observer?.disconnect();
+      observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -11,7 +14,7 @@ export function initIdlePrefetch() {
               if (href?.startsWith("/") && !href.includes(":")) {
                 fetch(href).catch(() => {});
               }
-              observer.unobserve(entry.target);
+              observer!.unobserve(entry.target);
             }
           });
         },
@@ -19,9 +22,14 @@ export function initIdlePrefetch() {
       );
 
       document.querySelectorAll('a[href^="/"]').forEach((link) => {
-        observer.observe(link);
+        observer!.observe(link);
       });
     },
     { timeout: 2000 }
   );
+}
+
+export function cleanupPrefetch() {
+  observer?.disconnect();
+  observer = null;
 }

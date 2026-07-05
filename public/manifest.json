@@ -1,0 +1,13 @@
+{
+  "name": "paxiv - Pixiv Custom Client",
+  "short_name": "paxiv",
+  "description": "Pixivのカスタムクライアント",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1a1a1a",
+  "background_color": "#ffffff",
+  "categories": ["entertainment"],
+  "icons": []
+}

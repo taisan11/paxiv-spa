@@ -1,5 +1,6 @@
 import { createSignal, onMount, type Component } from "solid-js";
 import { getAuth, setAuth, clearAuth } from "../lib/auth";
+import { CORS_PROXIES, getSelectedProxy, setSelectedProxy, getCustomProxyUrl, setCustomProxyUrl, type CorsProxyId } from "../lib/fetch";
 
 const Setting: Component = () => {
   const auth = getAuth();
@@ -8,6 +9,8 @@ const Setting: Component = () => {
   const [userId, setUserId] = createSignal(auth.userId ?? "");
   const [saved, setSaved] = createSignal(false);
   const [cacheSize, setCacheSize] = createSignal("計算中...");
+  const [proxyId, setProxyId] = createSignal<CorsProxyId>(getSelectedProxy());
+  const [customUrl, setCustomUrl] = createSignal(getCustomProxyUrl());
 
   const calculateCacheSize = async () => {
     if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -71,6 +74,33 @@ const Setting: Component = () => {
         <option value="dark">ダーク</option>
         <option value="auto">自動</option>
       </select>
+
+      <h2>CORSプロキシ</h2>
+      <p>画像・APIリクエストに使用するCORSプロキシを選択してください。</p>
+      <select value={proxyId()} onChange={(e) => {
+        const v = e.currentTarget.value as CorsProxyId;
+        setProxyId(v);
+        setSelectedProxy(v);
+      }}>
+        {CORS_PROXIES.map((p) => <option value={p.id}>{p.name}</option>)}
+      </select>
+      {proxyId() === "custom" && (
+        <div style={{ "margin-top": "0.5rem" }}>
+          <input
+            type="text"
+            placeholder="https://example.com/?url="
+            value={customUrl()}
+            onInput={(e) => {
+              setCustomUrl(e.currentTarget.value);
+              setCustomProxyUrl(e.currentTarget.value);
+            }}
+            style={{ width: "100%", "max-width": "400px" }}
+          />
+          <p style={{ "font-size": "0.85rem", color: "var(--text-secondary)" }}>
+            {`プロキシURL末尾に「?url=」を含めてください。例: https://example.com/?url=`}
+          </p>
+        </div>
+      )}
 
       <h2>小説の表示設定</h2>
       <p>小説ページでのテキスト表示設定です。設定はブラウザに保存されます。</p>

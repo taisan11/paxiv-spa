@@ -1,7 +1,39 @@
-const CORSPROXY = "https://corsproxy.io/";
+export const CORS_PROXIES = [
+  { id: "corsproxy.io", name: "corsproxy.io", base: "https://corsproxy.io/" },
+  { id: "api.cors.lol", name: "api.cors.lol", base: "https://api.cors.lol/" },
+  { id: "custom", name: "カスタム...", base: "" },
+] as const;
+
+export type CorsProxyId = (typeof CORS_PROXIES)[number]["id"];
+
+const DEFAULT_PROXY: CorsProxyId = "corsproxy.io";
+
+export function getSelectedProxy(): CorsProxyId {
+  const saved = localStorage.getItem("corsProxy");
+  if (saved && CORS_PROXIES.some((p) => p.id === saved)) return saved as CorsProxyId;
+  return DEFAULT_PROXY;
+}
+
+export function setSelectedProxy(id: CorsProxyId) {
+  localStorage.setItem("corsProxy", id);
+}
+
+export function getCustomProxyUrl(): string {
+  return localStorage.getItem("customProxyUrl") ?? "";
+}
+
+export function setCustomProxyUrl(url: string) {
+  localStorage.setItem("customProxyUrl", url);
+}
 
 export function proxyUrl(url: string): string {
-  return `${CORSPROXY}?url=${encodeURIComponent(url)}`;
+  const selected = getSelectedProxy();
+  if (selected === "custom") {
+    const customBase = getCustomProxyUrl().replace(/\/+$/, "");
+    return `${customBase}?url=${encodeURIComponent(url)}`;
+  }
+  const proxy = CORS_PROXIES.find((p) => p.id === selected) ?? CORS_PROXIES[0];
+  return `${proxy.base}?url=${encodeURIComponent(url)}`;
 }
 
 const PIXIV_DEFAULT_HEADERS = {

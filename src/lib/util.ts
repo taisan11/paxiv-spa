@@ -1,8 +1,10 @@
 import { proxyUrl } from "./fetch";
+import { isNativeApp } from "./native";
 
 export function url2imageURL(url: string): string {
   if (!url) return "";
   if (!url.includes("i.pximg.net")) throw new Error("Invalid URL");
+  if (isNativeApp()) return `paxiv-image://load?url=${encodeURIComponent(url)}`;
   return proxyUrl(url);
 }
 

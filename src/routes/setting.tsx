@@ -1,7 +1,7 @@
 import { createSignal, onMount, type Component } from "solid-js";
 import { getAuth, setAuth, clearAuth } from "../lib/auth";
 import { CORS_PROXIES, getSelectedProxy, setSelectedProxy, getCustomProxyUrl, setCustomProxyUrl, type CorsProxyId } from "../lib/fetch";
-import { clearAppStorage, clearCache, getAppStorageSize, getCacheSize, isNativeApp } from "../lib/native";
+import { clearAppStorage, clearCache, getAppStorageSize, getCacheSize, isNativeApp, startNativeLogin } from "../lib/native";
 
 const Setting: Component = () => {
   const auth = getAuth();
@@ -9,6 +9,8 @@ const Setting: Component = () => {
   const [csrfToken, setCsrfToken] = createSignal(auth.csrfToken ?? "");
   const [userId, setUserId] = createSignal(auth.userId ?? "");
   const [saved, setSaved] = createSignal(false);
+  const [loginStatus, setLoginStatus] = createSignal("");
+  const [loggingIn, setLoggingIn] = createSignal(false);
   const [cacheSize, setCacheSize] = createSignal("計算中...");
   const [storageSize, setStorageSize] = createSignal("計算中...");
   const [proxyId, setProxyId] = createSignal<CorsProxyId>(getSelectedProxy());
@@ -67,6 +69,24 @@ const Setting: Component = () => {
     setPhpsessid("");
     setCsrfToken("");
     setUserId("");
+  };
+
+  const handleNativeLogin = async () => {
+    setLoggingIn(true);
+    setLoginStatus("");
+    try {
+      const auth = await startNativeLogin();
+      setAuth(auth);
+      setPhpsessid(auth.PHPSESSID);
+      setCsrfToken(auth.csrfToken ?? "");
+      setUserId(auth.userId ?? "");
+      setLoginStatus("ログインしました");
+      calculateStorageSize();
+    } catch (error) {
+      setLoginStatus(error instanceof Error ? error.message : "ログインに失敗しました");
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
   const handleThemeChange = (e: Event) => {
@@ -162,6 +182,16 @@ const Setting: Component = () => {
 
       <h2>ログイン情報</h2>
       <p>ログイン情報は{isNativeApp() ? "端末内のNative Storage" : "ブラウザのlocalStorage"}に保存されます。</p>
+      {isNativeApp() && (
+        <div class="native-login-panel">
+          <p>内部ブラウザでPixivへログインすると、必要なCookieを自動的に取得します。</p>
+          <button type="button" disabled={loggingIn()} onClick={handleNativeLogin}>
+            {loggingIn() ? "ログイン画面を表示中…" : "Pixivでログイン"}
+          </button>
+          {loginStatus() && <p role="status">{loginStatus()}</p>}
+        </div>
+      )}
+      {!isNativeApp() && <>
       <p>
         <strong>Pixiv認証について:</strong><br />
         HAR上では、認証付きAPIで <code>PHPSESSID</code>（Cookie）と <code>x-user-id</code> が継続的に送信され、
@@ -189,6 +219,7 @@ const Setting: Component = () => {
         <button type="submit">ログイン</button>
         {saved() && <span style={{ "margin-left": "0.5rem", color: "green" }}>保存しました</span>}
       </form>
+      </>}
       <button onClick={handleClear} style={{ "margin-top": "0.5rem" }}>ログアウト</button>
 
       <h2>キャッシュ管理</h2>

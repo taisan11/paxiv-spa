@@ -68,6 +68,16 @@ export function clearAppStorage(): void {
   localStorage.clear();
 }
 
+export interface NativeLoginResult {
+  PHPSESSID: string;
+  csrfToken?: string;
+  userId?: string;
+}
+
+export async function startNativeLogin(): Promise<NativeLoginResult> {
+  return callNative<NativeLoginResult>("login.start");
+}
+
 export async function clearCache(): Promise<void> {
   if (isNativeApp()) {
     await callNative("cache.clear");

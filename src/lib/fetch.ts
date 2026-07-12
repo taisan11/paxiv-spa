@@ -1,4 +1,5 @@
 import { getAuth } from "./auth";
+import { isNativeApp, nativeFetch } from "./native";
 
 export const CORS_PROXIES = [
   { id: "corsproxy.io", name: "corsproxy.io", base: "https://corsproxy.io/" },
@@ -93,7 +94,7 @@ function getAuthFromStorage() {
   return { PHPSESSID, csrfToken, userId };
 }
 
-async function _fetch(url: string | URL, init?: RequestInit, lang: string = "ja"): Promise<Response> {
+async function _fetch(url: string | URL, init?: RequestInit, lang: string = "ja", cacheable = true): Promise<Response> {
   const formattedUrl = new URL(url);
   formattedUrl.searchParams.set("lang", lang);
   formattedUrl.searchParams.set("version", "8665b63a37a52408c102f586c91b13250ec0a1b2");
@@ -106,6 +107,9 @@ async function _fetch(url: string | URL, init?: RequestInit, lang: string = "ja"
   }
 
   const requestInit: RequestInit = { ...init, headers };
+  if (isNativeApp()) {
+    return nativeFetch(formattedUrl.toString(), requestInit, cacheable);
+  }
   return fetch(proxyUrl(formattedUrl.toString()), requestInit);
 }
 
@@ -116,7 +120,10 @@ export async function fetchPixivJson<T>(
 ): Promise<T> {
   const auth = getAuthFromStorage();
   const requestInit = withAuth(auth.PHPSESSID, auth.csrfToken, auth.userId, init);
-  const response = await _fetch(url, requestInit);
+  const response = await _fetch(url, requestInit, "ja", _cacheable);
+  if (!response.ok) {
+    throw new Error(`Pixiv API request failed: ${response.status}`);
+  }
   return response.json() as Promise<T>;
 }
 

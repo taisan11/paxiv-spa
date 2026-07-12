@@ -11,6 +11,7 @@ registerServiceWorker();
 const Home = lazy(() => import("./routes/index"));
 const Setting = lazy(() => import("./routes/setting"));
 const History = lazy(() => import("./routes/history"));
+const Bookmarks = lazy(() => import("./routes/bookmarks"));
 const ArtworkDetail = lazy(() => import("./routes/artworks/[id]"));
 const NovelDetail = lazy(() => import("./routes/novel/[id]"));
 const SearchIllust = lazy(() => import("./routes/search/i"));
@@ -40,6 +41,7 @@ function App() {
       <Route path="/" component={Home} />
       <Route path="/setting" component={Setting} />
       <Route path="/history" component={History} />
+      <Route path="/bookmarks" component={Bookmarks} />
       <Route path="/artworks/:id" component={ArtworkDetail} />
       <Route path="/novel/:id" component={NovelDetail} />
       <Route path="/search/i" component={SearchIllust} />

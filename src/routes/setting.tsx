@@ -1,6 +1,7 @@
 import { createSignal, onMount, type Component } from "solid-js";
 import { getAuth, setAuth, clearAuth } from "../lib/auth";
 import { CORS_PROXIES, getSelectedProxy, setSelectedProxy, getCustomProxyUrl, setCustomProxyUrl, type CorsProxyId } from "../lib/fetch";
+import { clearAppStorage, clearCache, getAppStorageSize, getCacheSize, isNativeApp } from "../lib/native";
 
 const Setting: Component = () => {
   const auth = getAuth();
@@ -9,27 +10,46 @@ const Setting: Component = () => {
   const [userId, setUserId] = createSignal(auth.userId ?? "");
   const [saved, setSaved] = createSignal(false);
   const [cacheSize, setCacheSize] = createSignal("計算中...");
+  const [storageSize, setStorageSize] = createSignal("計算中...");
   const [proxyId, setProxyId] = createSignal<CorsProxyId>(getSelectedProxy());
   const [customUrl, setCustomUrl] = createSignal(getCustomProxyUrl());
 
   const calculateCacheSize = async () => {
-    if ("storage" in navigator && "estimate" in navigator.storage) {
-      const { usage } = await navigator.storage.estimate();
-      setCacheSize(`${((usage ?? 0) / 1024 / 1024).toFixed(1)} MB`);
-    } else {
+    try {
+      const usage = await getCacheSize();
+      setCacheSize(`${(usage / 1024 / 1024).toFixed(1)} MB`);
+    } catch {
       setCacheSize("非対応");
     }
   };
 
+  const calculateStorageSize = async () => {
+    try {
+      const usage = await getAppStorageSize();
+      setStorageSize(usage < 1024 ? `${usage} B` : `${(usage / 1024).toFixed(1)} KB`);
+    } catch {
+      setStorageSize("非対応");
+    }
+  };
+
   const clearAllCaches = async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => caches.delete(k)));
-    const reg = await navigator.serviceWorker?.getRegistration();
-    if (reg) await reg.update();
+    await clearCache();
     setCacheSize("0 MB");
   };
 
-  onMount(calculateCacheSize);
+  onMount(() => {
+    calculateCacheSize();
+    calculateStorageSize();
+  });
+
+  const clearStorage = () => {
+    if (!window.confirm("ログイン情報、履歴、ブックマーク、設定をすべて削除しますか？")) return;
+    clearAppStorage();
+    setStorageSize("0 B");
+    setPhpsessid("");
+    setCsrfToken("");
+    setUserId("");
+  };
 
   const handleLogin = (e: Event) => {
     e.preventDefault();
@@ -76,7 +96,9 @@ const Setting: Component = () => {
       </select>
 
       <h2>CORSプロキシ</h2>
-      <p>画像・APIリクエストに使用するCORSプロキシを選択してください。</p>
+      {isNativeApp() ? (
+        <p>Native通信を使用中です。APIリクエストにCORSプロキシは使用しません。</p>
+      ) : <><p>画像・APIリクエストに使用するCORSプロキシを選択してください。</p>
       <select value={proxyId()} onChange={(e) => {
         const v = e.currentTarget.value as CorsProxyId;
         setProxyId(v);
@@ -100,7 +122,7 @@ const Setting: Component = () => {
             {`プロキシURL末尾に「?url=」を含めないでください。例: https://example.com/`}
           </p>
         </div>
-      )}
+      )}</>}
 
       <h2>小説の表示設定</h2>
       <p>小説ページでのテキスト表示設定です。設定はブラウザに保存されます。</p>
@@ -139,7 +161,7 @@ const Setting: Component = () => {
       </div>
 
       <h2>ログイン情報</h2>
-      <p>ログイン情報はブラウザのlocalStorageに保存されます。</p>
+      <p>ログイン情報は{isNativeApp() ? "端末内のNative Storage" : "ブラウザのlocalStorage"}に保存されます。</p>
       <p>
         <strong>Pixiv認証について:</strong><br />
         HAR上では、認証付きAPIで <code>PHPSESSID</code>（Cookie）と <code>x-user-id</code> が継続的に送信され、
@@ -172,6 +194,10 @@ const Setting: Component = () => {
       <h2>キャッシュ管理</h2>
       <p>現在のキャッシュサイズ: {cacheSize()}</p>
       <button onClick={clearAllCaches}>すべてのキャッシュを削除</button>
+      <h2>ストレージ管理</h2>
+      <p>保存データ容量: {storageSize()}</p>
+      <p>ログイン情報、表示設定、履歴、ブックマークが含まれます。</p>
+      <button onClick={clearStorage}>保存データをすべて削除</button>
     </>
   );
 };

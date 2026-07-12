@@ -1,5 +1,6 @@
 import { createSignal, onMount, For, type Component } from "solid-js";
 import { getHistory, getBookmarks, getFollows, clearSection, type HistoryItem } from "../lib/storage";
+import { isNativeApp } from "../lib/native";
 
 type HistorySection = "history-artworks" | "history-novel" | "bookmarks-artworks" | "bookmarks-novel" | "follows";
 
@@ -60,7 +61,7 @@ const History: Component = () => {
   return (
     <>
       <h1>履歴</h1>
-      <p>端末側に保存される履歴・フォロー・ブックマークは最大1000件です。</p>
+      <p>{isNativeApp() ? "Native版では閲覧履歴を件数無制限で保存します。" : "履歴・フォロー・ブックマークは最大1000件です。"}</p>
       <div class="history-tabs">
         <For each={tabs}>
           {(tab) => (

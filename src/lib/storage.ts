@@ -22,8 +22,8 @@ function readItems(key: string): HistoryItem[] {
   }
 }
 
-function writeItems(key: string, items: HistoryItem[]): void {
-  localStorage.setItem(key, JSON.stringify(items.slice(0, MAX_ITEMS)));
+function writeItems(key: string, items: HistoryItem[], unlimited = false): void {
+  localStorage.setItem(key, JSON.stringify(unlimited ? items : items.slice(0, MAX_ITEMS)));
 }
 
 export function getHistory(type: "artwork" | "novel"): HistoryItem[] {
@@ -42,7 +42,7 @@ export function saveHistory(id: string, title: string, type: "artwork" | "novel"
   const key = storageKey("history", type);
   const items = readItems(key).filter((item) => item.id !== id);
   items.unshift({ id, title, type, url, timestamp: Date.now() });
-  writeItems(key, items);
+  writeItems(key, items, isNativeApp());
 }
 
 export function toggleBookmark(id: string, title: string, type: "artwork" | "novel", url: string): boolean {
@@ -92,3 +92,4 @@ export function clearSection(section: string): void {
 }
 
 export type { HistoryItem };
+import { isNativeApp } from "./native";

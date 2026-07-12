@@ -2,7 +2,7 @@ import { createResource, For, Show, Switch, Match, createSignal, onMount, type C
 import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../lib/fetch";
 import { url2imageURL, sanitizeHtml } from "../../lib/util";
-import { saveHistory, toggleBookmark } from "../../lib/storage";
+import { isBookmarked, saveHistory, toggleBookmark } from "../../lib/storage";
 import type { AjaxNovelDetailResponse } from "../../lib/types/ajax";
 
 function applyNovelSettings() {
@@ -38,6 +38,7 @@ function applyNovelSettings() {
 
 const NovelDetail: Component = () => {
   const params = useParams<{ id: string }>();
+  const [bookmarked, setBookmarked] = createSignal(isBookmarked(params.id, "novel"));
 
   const [data] = createResource(
     () => params.id,
@@ -84,11 +85,12 @@ const NovelDetail: Component = () => {
                 <h1 id="title">{details.title}</h1>
                 <div class="client-action-bar">
                   <button
-                    class="client-action-btn"
-                    onClick={() => toggleBookmark(details.id, details.title, "novel", `/novel/${details.id}`)}
+                    class={`client-action-btn${bookmarked() ? " active" : ""}`}
+                    aria-pressed={bookmarked()}
+                    onClick={() => setBookmarked(toggleBookmark(details.id, details.title, "novel", `/novel/${details.id}`))}
                     type="button"
                   >
-                    ブックマークする
+                    {bookmarked() ? "ブックマーク済み" : "ブックマークする"}
                   </button>
                 </div>
                 <img loading="lazy" src={url2imageURL(details.coverUrl)} alt="表紙" />

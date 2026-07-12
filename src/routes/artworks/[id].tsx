@@ -3,7 +3,7 @@ import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../lib/fetch";
 import { url2imageURL, sanitizeHtml, toLowResThumbnailURL } from "../../lib/util";
 import { ThumbnailCard } from "../../components/ThumbnailCard";
-import { saveHistory, toggleBookmark } from "../../lib/storage";
+import { isBookmarked, saveHistory, toggleBookmark } from "../../lib/storage";
 import type {
   AjaxIllustDetailResponse,
   AjaxIllustPagesResponse,
@@ -15,6 +15,7 @@ import type {
 const ArtworkDetail: Component = () => {
   const params = useParams<{ id: string }>();
   const [viewerOpen, setViewerOpen] = createSignal(false);
+  const [bookmarked, setBookmarked] = createSignal(isBookmarked(params.id, "artwork"));
 
   const [illustData] = createResource(
     () => params.id,
@@ -89,11 +90,12 @@ const ArtworkDetail: Component = () => {
 
                 <div class="client-action-bar">
                   <button
-                    class="client-action-btn"
-                    onClick={() => toggleBookmark(details.id, details.title, "artwork", `/artworks/${details.id}`)}
+                    class={`client-action-btn${bookmarked() ? " active" : ""}`}
+                    aria-pressed={bookmarked()}
+                    onClick={() => setBookmarked(toggleBookmark(details.id, details.title, "artwork", `/artworks/${details.id}`))}
                     type="button"
                   >
-                    ブックマークする
+                    {bookmarked() ? "ブックマーク済み" : "ブックマークする"}
                   </button>
                 </div>
 

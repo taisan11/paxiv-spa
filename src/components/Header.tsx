@@ -13,6 +13,7 @@ export function Header() {
       <nav>
         <A href="/search/i">検索</A>
         <A href="/history">履歴</A>
+        <A href="/bookmarks">ブックマーク</A>
         <A href="/setting">設定</A>
       </nav>
     </header>

@@ -2,10 +2,10 @@ import { render } from "solid-js/web";
 import { Router, Route } from "@solidjs/router";
 import { Suspense, lazy } from "solid-js";
 import { Header } from "./components/Header";
-import { OfflineNotice } from "./components/OfflineNotice";
 import { registerServiceWorker } from "./lib/register-sw";
 import "./style.css";
 
+// Remove Service Workers installed by older builds. Offline mode is unsupported.
 registerServiceWorker();
 
 const Home = lazy(() => import("./routes/index"));
@@ -35,7 +35,6 @@ function App() {
         <Suspense fallback={<p>読み込み中...</p>}>
           {props.children}
         </Suspense>
-        <OfflineNotice />
       </>
     )}>
       <Route path="/" component={Home} />

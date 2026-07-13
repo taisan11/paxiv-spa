@@ -1,15 +1,8 @@
 export function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => {
-          console.log("SW registered:", reg.scope);
-          setInterval(() => reg.update(), 60 * 60 * 1000);
-        })
-        .catch((err) => {
-          console.error("SW registration failed:", err);
-        });
-    });
-  }
+  // Offline mode is intentionally unsupported. Existing registrations are
+  // removed when this module is called by older clients.
+  if (!("serviceWorker" in navigator)) return;
+  void navigator.serviceWorker.getRegistrations().then((registrations) =>
+    Promise.all(registrations.map((registration) => registration.unregister()))
+  );
 }

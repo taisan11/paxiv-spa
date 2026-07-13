@@ -1,9 +1,10 @@
-import { createResource, For, Show, Switch, Match, type Component } from "solid-js";
+import { createResource, createSignal, For, Show, Switch, Match, type Component } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../../lib/fetch";
 import { url2imageURL, normalizePixivIdList, paginateItems, toLowResThumbnailURL } from "../../../lib/util";
 import { Pagination } from "../../../components/Pagination";
 import { ThumbnailCard } from "../../../components/ThumbnailCard";
+import { ViewModeToggle, type ViewMode } from "../../../components/ViewModeToggle";
 import type { AjaxUserProfileAllResponse, AjaxUserNovelsByIdsResponse } from "../../../lib/types/ajax";
 
 const UserNovels: Component = () => {
@@ -11,6 +12,7 @@ const UserNovels: Component = () => {
   const [searchParams] = useSearchParams<{ p?: string }>();
 
   const p = () => Number(searchParams.p) || 1;
+  const [viewMode, setViewMode] = createSignal<ViewMode>("grid");
 
   const [profileData] = createResource(
     () => params.id,
@@ -53,7 +55,7 @@ const UserNovels: Component = () => {
   const novelSeries = () => {
     const prof = profileData();
     if (!prof || prof.error) return [];
-    return prof.body.novelSeries;
+    return prof.body.novelSeries ?? [];
   };
 
   const lastPage = () => Math.max(1, Math.ceil(allIds().length / 20));
@@ -83,7 +85,11 @@ const UserNovels: Component = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img loading="lazy" src={url2imageURL(series.cover.urls["128x128"])} alt={series.title} />
+                  <img
+                    loading="lazy"
+                    src={url2imageURL(series.cover.urls["128x128"] ?? series.cover.urls.original ?? "")}
+                    alt={series.title}
+                  />
                   <span>{series.title}</span>
                 </a>
               )}
@@ -93,7 +99,8 @@ const UserNovels: Component = () => {
           <Show when={novels().length === 0}>
             <p class="empty-state">表示できる小説がありません。</p>
           </Show>
-          <div class="list-base-grid">
+          <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+          <div class={`list-base-grid ${viewMode() === "list" ? "list-view" : ""}`}>
             <For each={novels()}>
               {(novel) => (
                 <ThumbnailCard
@@ -102,6 +109,7 @@ const UserNovels: Component = () => {
                     novel.cover?.urls["240mw"] || novel.url || novel.cover?.urls["480mw"] || novel.cover?.urls.original || ""
                   ))}
                   title={novel.title}
+                  author={novel.userName}
                   xRestrict={novel.xRestrict}
                 />
               )}

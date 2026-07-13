@@ -3,6 +3,7 @@ import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../lib/fetch";
 import { url2imageURL, sanitizeHtml, toLowResThumbnailURL } from "../../lib/util";
 import { ThumbnailCard } from "../../components/ThumbnailCard";
+import { ViewModeToggle, type ViewMode } from "../../components/ViewModeToggle";
 import { isBookmarked, saveHistory, toggleBookmark } from "../../lib/storage";
 import type {
   AjaxIllustDetailResponse,
@@ -15,6 +16,7 @@ import type {
 const ArtworkDetail: Component = () => {
   const params = useParams<{ id: string }>();
   const [viewerOpen, setViewerOpen] = createSignal(false);
+  const [viewMode, setViewMode] = createSignal<ViewMode>("grid");
   const [bookmarked, setBookmarked] = createSignal(isBookmarked(params.id, "artwork"));
 
   const [illustData] = createResource(
@@ -100,7 +102,7 @@ const ArtworkDetail: Component = () => {
                 </div>
 
                 <Show when={pagesData()} fallback={
-                  <img loading="lazy" src={url2imageURL(details.urls.regular)} alt={details.title} />
+                  <img loading="lazy" src={url2imageURL(details.urls.regular ?? "")} alt={details.title} />
                 }>
                   <>
                     <button class="viewer-open-btn" onClick={() => setViewerOpen(true)}>
@@ -185,13 +187,15 @@ const ArtworkDetail: Component = () => {
                 <Show when={relatedWorks().length > 0}>
                   <section class="related-works-section">
                     <h2>関連作品</h2>
-                    <div class="list-base-grid">
+                    <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+                    <div class={`list-base-grid ${viewMode() === "list" ? "list-view" : ""}`}>
                       <For each={relatedWorks()}>
                         {(work) => (
                           <ThumbnailCard
                             href={`/artworks/${work.id}`}
                             imageSrc={url2imageURL(toLowResThumbnailURL(work.url ?? ""))}
                             title={work.title}
+                            author={work.userName}
                             xRestrict={work.xRestrict}
                             pageCount={work.pageCount}
                           />

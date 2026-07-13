@@ -1,9 +1,10 @@
-import { createResource, For, Show, Switch, Match, type Component } from "solid-js";
+import { createResource, createSignal, For, Show, Switch, Match, type Component } from "solid-js";
 import { useParams, useSearchParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../../lib/fetch";
 import { url2imageURL, normalizePixivIdList, paginateItems, toLowResThumbnailURL } from "../../../lib/util";
 import { Pagination } from "../../../components/Pagination";
 import { ThumbnailCard } from "../../../components/ThumbnailCard";
+import { ViewModeToggle, type ViewMode } from "../../../components/ViewModeToggle";
 import type { AjaxUserProfileAllResponse, AjaxUserIllustsByIdsResponse } from "../../../lib/types/ajax";
 
 const UserManga: Component = () => {
@@ -11,6 +12,7 @@ const UserManga: Component = () => {
   const [searchParams] = useSearchParams<{ p?: string }>();
 
   const p = () => Number(searchParams.p) || 1;
+  const [viewMode, setViewMode] = createSignal<ViewMode>("grid");
 
   const [profileData] = createResource(
     () => params.id,
@@ -68,13 +70,15 @@ const UserManga: Component = () => {
           <Show when={mangas().length === 0}>
             <p class="empty-state">表示できるマンガがありません。</p>
           </Show>
-          <div class="list-base-grid">
+          <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+          <div class={`list-base-grid ${viewMode() === "list" ? "list-view" : ""}`}>
             <For each={mangas()}>
               {(illust) => (
                 <ThumbnailCard
                   href={`/artworks/${illust.id}`}
                   imageSrc={url2imageURL(toLowResThumbnailURL(illust.url))}
                   title={illust.title}
+                  author={illust.userName}
                   xRestrict={illust.xRestrict}
                   pageCount={illust.pageCount}
                 />

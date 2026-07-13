@@ -1,6 +1,7 @@
 /* 検索ボックス */
 .searchbox-form {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-start;
     align-items: flex-start;
     gap: 0.3rem;
@@ -14,6 +15,18 @@
     border-radius: 4px;
     box-sizing: border-box;
     transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.searchbox-form select,
+.searchbox-form input[type="number"],
+.searchbox-form input[type="date"] {
+    min-height: 2.2rem;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font: inherit;
 }
 
 .searchbox-form input[type="text"] {
@@ -288,10 +301,13 @@ p {
     box-shadow: 0 1px 4px var(--shadow-light);
     padding: 0.5rem 0.5rem 1rem 0.5rem;
     transition: box-shadow 0.2s;
+    color: var(--text-primary);
+    text-decoration: none;
 }
 
 .list-base-item:hover {
     box-shadow: 0 2px 8px var(--shadow-medium);
+    text-decoration: none;
 }
 
 .list-base-thumb-wrap {
@@ -307,6 +323,91 @@ p {
     object-fit: contain;
     border-radius: 4px;
     margin: 0;
+}
+
+.list-base-content {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0 0.2rem;
+}
+
+.list-base-title {
+    color: var(--text-primary);
+    font-size: 0.98rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.list-base-author {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.list-base-grid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.list-base-grid.list-view .list-base-item {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    min-height: 112px;
+    padding: 0.65rem 0.8rem;
+}
+
+.list-base-grid.list-view .list-base-thumb-wrap {
+    width: 148px;
+    height: 96px;
+    margin: 0;
+}
+
+.list-base-grid.list-view .list-base-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.list-base-grid.list-view .list-base-content {
+    padding: 0;
+    gap: 0.35rem;
+}
+
+.list-base-grid.list-view .list-base-title {
+    font-size: 1.05rem;
+}
+
+.view-mode-toggle {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    margin: 0.75rem 0;
+}
+
+.view-mode-toggle button {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.view-mode-toggle button:hover,
+.view-mode-toggle button:focus-visible,
+.view-mode-toggle button.active {
+    background: var(--accent-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .thumb-badge {
@@ -480,6 +581,17 @@ header nav a:focus {
         grid-template-columns: 1fr 1fr;
     }
 
+    .list-base-grid.list-view .list-base-item {
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 0.75rem;
+        min-height: 88px;
+    }
+
+    .list-base-grid.list-view .list-base-thumb-wrap {
+        width: 104px;
+        height: 72px;
+    }
+
     header {
         padding: 0.8rem 10px;
         gap: 0.8rem;
@@ -518,6 +630,20 @@ header nav a:focus {
     header nav a {
         padding: 0.3rem 0.6rem;
         font-size: 0.8rem;
+    }
+
+    .list-base-grid.list-view .list-base-item {
+        grid-template-columns: 84px minmax(0, 1fr);
+        padding: 0.55rem;
+    }
+
+    .list-base-grid.list-view .list-base-thumb-wrap {
+        width: 84px;
+        height: 64px;
+    }
+
+    .list-base-grid.list-view .list-base-title {
+        font-size: 0.98rem;
     }
 }
 
@@ -651,14 +777,6 @@ header nav a:focus {
 }
 
 /* 検索オプション */
-.search-options {
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    margin: 0rem 0;
-    box-shadow: 0 1px 4px var(--shadow-light);
-}
-
 .search-options-toggle {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
@@ -674,8 +792,15 @@ header nav a:focus {
 
 .search-options-content {
     display: none;
+    width: 100%;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px var(--shadow-light);
 }
 
 .search-options-content.active {
@@ -695,6 +820,9 @@ header nav a:focus {
 }
 
 .option-group select,
+.option-group input[type="text"],
+.option-group input[type="number"],
+.option-group input[type="date"],
 .option-group input[type="checkbox"] {
     padding: 0.4rem;
     border: 1px solid var(--border-color);
@@ -713,6 +841,32 @@ header nav a:focus {
     display: flex;
     align-items: center;
     font-weight: normal !important;
+}
+
+.option-checkboxes {
+    justify-content: center;
+}
+
+.option-range {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+}
+
+.option-range > label,
+.option-range > select {
+    grid-column: 1 / -1;
+}
+
+.option-range input {
+    width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .search-options-content {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* 小説テキスト */

@@ -1,13 +1,15 @@
-import { createResource, For, Show, Switch, Match, type Component } from "solid-js";
+import { createResource, createSignal, For, Show, Switch, Match, type Component } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../../lib/fetch";
 import { url2imageURL, sanitizeHtml, normalizePixivMapValues, toLowResThumbnailURL } from "../../../lib/util";
 import { ThumbnailCard } from "../../../components/ThumbnailCard";
+import { ViewModeToggle, type ViewMode } from "../../../components/ViewModeToggle";
 import { toggleFollow } from "../../../lib/storage";
 import type { AjaxUserResponse, AjaxUserProfileTopResponse } from "../../../lib/types/ajax";
 
 const UserProfile: Component = () => {
   const params = useParams<{ id: string }>();
+  const [viewMode, setViewMode] = createSignal<ViewMode>("grid");
 
   const [userdata] = createResource(
     () => params.id,
@@ -101,13 +103,15 @@ const UserProfile: Component = () => {
                 <Show when={[...illusts(), ...mangas()].length === 0}>
                   <p class="empty-state">公開されているイラスト・マンガがありません。</p>
                 </Show>
-                <div class="list-base-grid">
+                <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+                <div class={`list-base-grid ${viewMode() === "list" ? "list-view" : ""}`}>
                   <For each={[...illusts(), ...mangas()]}>
                     {(illust) => (
                       <ThumbnailCard
                         href={`/artworks/${illust.id}`}
                         imageSrc={url2imageURL(toLowResThumbnailURL(illust.url))}
                         title={illust.title}
+                        author={illust.userName}
                         xRestrict={illust.xRestrict}
                         pageCount={illust.pageCount}
                       />
@@ -121,7 +125,7 @@ const UserProfile: Component = () => {
                 <Show when={novels().length === 0}>
                   <p class="empty-state">公開されている小説がありません。</p>
                 </Show>
-                <div class="list-base-grid">
+                <div class={`list-base-grid ${viewMode() === "list" ? "list-view" : ""}`}>
                   <For each={novels()}>
                     {(novel) => (
                       <ThumbnailCard
@@ -130,6 +134,7 @@ const UserProfile: Component = () => {
                           novel.cover?.urls["240mw"] || novel.url || novel.cover?.urls["480mw"] || novel.cover?.urls.original || ""
                         ))}
                         title={novel.title}
+                        author={novel.userName}
                         xRestrict={novel.xRestrict}
                       />
                     )}

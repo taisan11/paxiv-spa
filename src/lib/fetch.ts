@@ -97,7 +97,7 @@ function getAuthFromStorage() {
 async function _fetch(url: string | URL, init?: RequestInit, lang: string = "ja", cacheable = true): Promise<Response> {
   const formattedUrl = new URL(url);
   formattedUrl.searchParams.set("lang", lang);
-  formattedUrl.searchParams.set("version", "8665b63a37a52408c102f586c91b13250ec0a1b2");
+  formattedUrl.searchParams.set("version", "e1ad262ad36ee722242e71f1b5c2dd0aa07df0f5");
 
   const headers = normalizeHeaders(init?.headers);
   for (const [key, value] of Object.entries(PIXIV_DEFAULT_HEADERS)) {

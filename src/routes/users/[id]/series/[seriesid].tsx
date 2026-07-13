@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "@solidjs/router";
 import { fetchPixivJson } from "../../../../lib/fetch";
 import { url2imageURL, toLowResThumbnailURL } from "../../../../lib/util";
 import { Pagination } from "../../../../components/Pagination";
-import type { AjaxIllustSeriesDetailResponse, AjaxIllustSeriesContentResponse } from "../../../../lib/types/ajax";
+import type { AjaxIllustSeriesPageResponse } from "../../../../lib/types/ajax";
 
 const SeriesDetail: Component = () => {
   const params = useParams<{ id: string; seriesid: string }>();
@@ -11,61 +11,55 @@ const SeriesDetail: Component = () => {
 
   const p = () => Number(searchParams.p) || 1;
 
-  const [detailData] = createResource(
-    () => params.seriesid,
-    (id) => fetchPixivJson<AjaxIllustSeriesDetailResponse>(
-      `https://www.pixiv.net/ajax/illust/series/${id}`
+  const [seriesData] = createResource(
+    () => ({ seriesid: params.seriesid, p: p() }),
+    ({ seriesid, p }) => fetchPixivJson<AjaxIllustSeriesPageResponse>(
+      `https://www.pixiv.net/ajax/series/${seriesid}?p=${p}`
     )
   );
 
-  const [contentData] = createResource(
-    () => ({ seriesid: params.seriesid, p: p() }),
-    async ({ seriesid, p }) => {
-      const lastOrder = (p - 1) * 10;
-      return fetchPixivJson<AjaxIllustSeriesContentResponse>(
-        `https://www.pixiv.net/ajax/illust/series_content/${seriesid}?limit=10&last_order=${lastOrder}`
-      );
-    }
-  );
-
   const items = () => {
-    const d = contentData();
+    const d = seriesData();
     if (!d || d.error) return [];
-    return d.body.series_contents ?? d.body.thumbnails?.illust ?? [];
+    const byId = new Map(d.body.thumbnails.illust.map((item) => [item.id, item]));
+    return d.body.page.series.flatMap(({ workId }) => {
+      const item = byId.get(workId);
+      return item ? [item] : [];
+    });
   };
 
-  const total = () => {
-    const d = detailData();
-    if (!d || d.error) return 0;
-    return Number(d.body.series.total);
-  };
+  const detail = () => seriesData()?.body.illustSeries.find((series) => series.id === params.seriesid)
+    ?? seriesData()?.body.illustSeries[0];
+
+  const total = () => seriesData()?.body.page.total ?? detail()?.total ?? 0;
 
   const lastPage = () => {
     const t = total();
-    return t > 0 ? Math.ceil(t / 10) : p();
+    return t > 0 ? Math.ceil(t / 12) : p();
   };
+
+  const imageUrl = (url: string) => url.includes("i.pximg.net")
+    ? url2imageURL(toLowResThumbnailURL(url))
+    : url;
 
   return (
     <>
       <Switch>
-        <Match when={detailData.loading}>
+        <Match when={seriesData.loading}>
           <p>読み込み中...</p>
         </Match>
-        <Match when={detailData.error || detailData()?.error}>
+        <Match when={seriesData.error || seriesData()?.error}>
           <h1>エラー</h1>
-          <p>{detailData()?.message || "シリーズ情報の取得に失敗しました。"}</p>
+          <p>{seriesData()?.message || "シリーズ情報の取得に失敗しました。"}</p>
         </Match>
-        <Match when={contentData.error || contentData()?.error}>
-          <h1>エラー</h1>
-          <p>{contentData()?.message || "シリーズ作品の取得に失敗しました。"}</p>
-        </Match>
-        <Match when={detailData()}>
+        <Match when={seriesData()}>
           {(() => {
-            const detail = detailData()!;
+            const series = detail();
             return (
               <>
-                <h1>{detail.body.series.title}</h1>
-                <p>合計{detail.body.series.total}個のイラスト</p>
+                <h1>{series?.title || "シリーズ"}</h1>
+                <Show when={series?.description}><p>{series?.description}</p></Show>
+                <p>合計{total()}個の作品</p>
                 <Show when={items().length === 0}>
                   <p class="empty-state">表示できる作品がありません。</p>
                 </Show>
@@ -78,7 +72,7 @@ const SeriesDetail: Component = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <img loading="lazy" src={url2imageURL(toLowResThumbnailURL(illust.url))} alt={illust.title} />
+                        <img loading="lazy" src={imageUrl(illust.url)} alt={illust.title} />
                         <span>{illust.title}</span>
                       </a>
                     )}
